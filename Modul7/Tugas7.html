@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lowongan Kerja</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Lowongan Kerja</h2>
+        
+        <!-- Form untuk Menambahkan Lowongan -->
+        <form id="lowonganForm">
+            <div class="form-group">
+                <label for="kode">Kode:</label>
+                <input type="text" class="form-control" id="kode" required>
+            </div>
+            <div class="form-group">
+                <label for="posisi">Posisi:</label>
+                <input type="text" class="form-control" id="posisi" required>
+            </div>
+            <div class="form-group">
+                <label for="perusahaan">Perusahaan:</label>
+                <input type="text" class="form-control" id="perusahaan" required>
+            </div>
+            <div class="form-group">
+                <label for="lokasi">Lokasi:</label>
+                <input type="text" class="form-control" id="lokasi" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Tambah Lowongan</button>
+        </form>
+
+        <!-- Form untuk Mencari Lowongan -->
+        <form id="searchForm" class="mt-4">
+            <div class="form-group">
+                <label for="searchInput">Cari Lowongan (Kode atau Posisi):</label>
+                <input type="text" class="form-control" id="searchInput">
+            </div>
+            <button type="submit" class="btn btn-info">Cari</button>
+            <button type="button" id="resetSearch" class="btn btn-secondary ml-2">Reset</button>
+        </form>
+
+        <!-- Tabel untuk Menampilkan Lowongan -->
+        <table class="table table-striped mt-4" id="lowonganTable">
+            <thead>
+                <tr>
+                    <th>Kode</th>
+                    <th>Posisi</th>
+                    <th>Perusahaan</th>
+                    <th>Lokasi</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data Lowongan akan muncul di sini -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        const apiUrl = "https://script.google.com/macros/s/AKfycbwyNXaHOaQxP7EPcegNgn0Vw58adqzppmhcb2_pU0SvqdFuIAzYCMgg4MyTXwQ2pS23/exec"; // Ganti dengan URL Google Apps Script Anda
+
+        // Fungsi untuk Memuat Data Lowongan Kerja
+        function loadLowonganKerja() {
+            $.get(apiUrl + "?action=read", function(data) {
+                let tableBody = $('#lowonganTable tbody');
+                tableBody.empty();
+                data.forEach(item => {
+                    tableBody.append(`<tr>
+                        <td>${item.Kode}</td>
+                        <td>${item.Posisi}</td>
+                        <td>${item.Perusahaan}</td>
+                        <td>${item.Lokasi}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm deleteButton" data-kode="${item.Kode}">Hapus</button>
+                        </td>
+                    </tr>`);
+                });
+            });
+        }
+
+        // Fungsi untuk Menambahkan Lowongan Baru
+        $('#lowonganForm').submit(function(e) {
+            e.preventDefault();
+            const data = {
+                kode: $('#kode').val(),
+                posisi: $('#posisi').val(),
+                perusahaan: $('#perusahaan').val(),
+                lokasi: $('#lokasi').val(),
+                action: "insert"
+            };
+
+            $.get(apiUrl, data, function(response) {
+                alert(response.result);
+                loadLowonganKerja();
+                $('#lowonganForm')[0].reset(); // Reset form setelah submit
+            });
+        });
+
+        // Fungsi untuk Menghapus Lowongan
+        $(document).on('click', '.deleteButton', function() {
+            const kode = $(this).data('kode');
+            const data = {
+                kode: kode,
+                action: "delete"
+            };
+
+            if (confirm("Yakin ingin menghapus lowongan ini?")) {
+                $.get(apiUrl, data, function(response) {
+                    alert(response.result);
+                    loadLowonganKerja();
+                });
+            }
+        });
+
+        // Fungsi untuk Mencari Lowongan
+        $('#searchForm').submit(function(e) {
+            e.preventDefault();
+            const searchInput = $('#searchInput').val().trim();
+            const data = {
+                posisi: searchInput,
+                action: "search"
+            };
+
+            if (searchInput) {
+                $.get(apiUrl, data, function(response) {
+                    let tableBody = $('#lowonganTable tbody');
+                    tableBody.empty();
+                    response.forEach(item => {
+                        tableBody.append(`<tr>
+                            <td>${item.Kode}</td>
+                            <td>${item.Posisi}</td>
+                            <td>${item.Perusahaan}</td>
+                            <td>${item.Lokasi}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm deleteButton" data-kode="${item.Kode}">Hapus</button>
+                            </td>
+                        </tr>`);
+                    });
+                });
+            } else {
+                alert("Masukkan kata kunci pencarian.");
+            }
+        });
+
+        // Tombol Reset Pencarian
+        $('#resetSearch').click(function() {
+            $('#searchInput').val('');
+            loadLowonganKerja();
+        });
+
+        // Load Data Ketika Halaman Dimuat
+        loadLowonganKerja();
+    </script>
+</body>
+</html>
